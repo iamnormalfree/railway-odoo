@@ -12,16 +12,25 @@ echo "Database is now available"
 # Odoo 18 requires non-superuser for security
 if [ "${ODOO_DATABASE_USER}" = "postgres" ]; then
     echo "Creating dedicated Odoo database user..."
+
+    # Set PGPASSWORD for psql authentication
     export PGPASSWORD="${ODOO_DATABASE_PASSWORD}"
 
-    # Create odoo user if it doesn't exist
-    psql -h "${ODOO_DATABASE_HOST}" -p "${ODOO_DATABASE_PORT}" -U postgres -d postgres -tc \
-        "SELECT 1 FROM pg_user WHERE usename = 'odoo'" | grep -q 1 || \
-    psql -h "${ODOO_DATABASE_HOST}" -p "${ODOO_DATABASE_PORT}" -U postgres -d postgres -c \
-        "CREATE USER odoo WITH PASSWORD '${ODOO_DATABASE_PASSWORD}' CREATEDB;"
+    # Check if odoo user exists
+    USER_EXISTS=$(PGPASSWORD="${ODOO_DATABASE_PASSWORD}" psql -h "${ODOO_DATABASE_HOST}" -p "${ODOO_DATABASE_PORT}" -U postgres -d postgres -tAc "SELECT 1 FROM pg_user WHERE usename = 'odoo'")
+
+    if [ "$USER_EXISTS" != "1" ]; then
+        echo "Creating odoo database user..."
+        PGPASSWORD="${ODOO_DATABASE_PASSWORD}" psql -h "${ODOO_DATABASE_HOST}" -p "${ODOO_DATABASE_PORT}" -U postgres -d postgres -c \
+            "CREATE USER odoo WITH PASSWORD '${ODOO_DATABASE_PASSWORD}' CREATEDB;"
+        echo "Odoo user created successfully"
+    else
+        echo "Odoo user already exists"
+    fi
 
     echo "Using dedicated odoo user"
     export ODOO_DB_USER="odoo"
+    export PGPASSWORD="${ODOO_DATABASE_PASSWORD}"
 else
     export ODOO_DB_USER="${ODOO_DATABASE_USER}"
 fi
