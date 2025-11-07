@@ -1,4 +1,4 @@
-FROM odoo:17.0
+FROM odoo:18.0
 
 ARG LOCALE=en_US.UTF-8
 
@@ -16,12 +16,13 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
     && locale-gen ${LOCALE} \
     && rm -rf /var/lib/apt/lists/*
 
-# Switch back to odoo user for runtime (security best practice)
-USER odoo
-
 WORKDIR /app
 
-COPY --chmod=755 entrypoint.sh ./
+COPY entrypoint.sh ./
+RUN chmod +x entrypoint.sh
+
+# Switch back to odoo user for runtime (security best practice)
+USER odoo
 
 ENTRYPOINT ["/bin/sh"]
 
