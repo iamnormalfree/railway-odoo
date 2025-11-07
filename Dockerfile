@@ -6,10 +6,18 @@ ENV LANGUAGE=${LOCALE}
 ENV LC_ALL=${LOCALE}
 ENV LANG=${LOCALE}
 
-USER 0
+# Temporarily switch to root for package installation
+USER root
 
-RUN apt-get -y update && apt-get install -y --no-install-recommends locales netcat-openbsd \
-    && locale-gen ${LOCALE}
+RUN apt-get -y update && apt-get install -y --no-install-recommends \
+    locales \
+    netcat-openbsd \
+    postgresql-client \
+    && locale-gen ${LOCALE} \
+    && rm -rf /var/lib/apt/lists/*
+
+# Switch back to odoo user for runtime (security best practice)
+USER odoo
 
 WORKDIR /app
 
