@@ -14,10 +14,29 @@ echo "Database is now available"
 
 echo "Using database user: ${ODOO_DATABASE_USER}"
 
+ALLOW_DATABASE_MANAGER=${ODOO_ALLOW_DATABASE_MANAGER:-false}
+MASTER_PASSWORD=${ODOO_MASTER_PASSWORD:-admin}
+CONFIG_PATH=${ODOO_RC:-/tmp/odoo.conf}
+
+if [ "$ALLOW_DATABASE_MANAGER" = "true" ]; then
+    echo "Database manager enabled (list_db = True)"
+    LIST_DB_VALUE="True"
+else
+    echo "Database manager disabled (list_db = False)"
+    LIST_DB_VALUE="False"
+fi
+
+cat > "$CONFIG_PATH" <<EOFCONF
+[options]
+list_db = ${LIST_DB_VALUE}
+admin_passwd = ${MASTER_PASSWORD}
+EOFCONF
+
+export ODOO_RC="$CONFIG_PATH"
+
 exec odoo \
+    -c "${CONFIG_PATH}" \
     --http-port="${PORT}" \
-    --init=all \
-    --without-demo=True \
     --proxy-mode \
     --db_host="${ODOO_DATABASE_HOST}" \
     --db_port="${ODOO_DATABASE_PORT}" \
@@ -29,4 +48,4 @@ exec odoo \
     --smtp-user="${ODOO_SMTP_USER}" \
     --smtp-password="${ODOO_SMTP_PASSWORD}" \
     --email-from="${ODOO_EMAIL_FROM}" \
-    --no-database-list 2>&1
+    2>&1
