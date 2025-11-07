@@ -24,6 +24,6 @@ RUN chmod +x entrypoint.sh
 # Switch back to odoo user for runtime (security best practice)
 USER odoo
 
-ENTRYPOINT ["/bin/sh"]
+ENTRYPOINT ["/bin/bash"]
 
 CMD ["entrypoint.sh"]
